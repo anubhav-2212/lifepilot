@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { healthRouter } from './modules/health/health.routes.js';
 import { authRouter } from './modules/auth/auth.routes.js';
+import { gmailRouter } from './modules/integrations/gmail/gmail.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 export const createApp = () => {
@@ -32,6 +33,7 @@ export const createApp = () => {
   // API Routes
   app.use('/api/health', healthRouter);
   app.use('/api/auth', authRouter);
+  app.use('/api/gmail', gmailRouter);
 
   // Fallback 404 handler
   app.use('*', (req, res) => {
