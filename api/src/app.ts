@@ -5,6 +5,7 @@ import morgan from 'morgan';
 import cookieParser from 'cookie-parser';
 import { env } from './config/env.js';
 import { healthRouter } from './modules/health/health.routes.js';
+import { authRouter } from './modules/auth/auth.routes.js';
 import { errorHandler } from './middleware/error.middleware.js';
 
 export const createApp = () => {
@@ -28,8 +29,9 @@ export const createApp = () => {
     app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
   }
 
-  // Health route
+  // API Routes
   app.use('/api/health', healthRouter);
+  app.use('/api/auth', authRouter);
 
   // Fallback 404 handler
   app.use('*', (req, res) => {
