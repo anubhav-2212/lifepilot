@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ResponsibilityCategory {
+  BILL
+  APPOINTMENT
+  SUBSCRIPTION
+  COMMITMENT
+}
+
+enum ResponsibilityStatus {
+  UPCOMING
+  COMPLETED
+  DISMISSED
+}
+
+enum SourceType {
+  GMAIL
+  CALENDAR
+  MANUAL
+}
+
+model User {
+  id                 String             @id @default(cuid())
+  email              String             @unique
+  name               String?
+  picture            String?
+  timezone           String             @default("UTC")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  connectedAccounts  ConnectedAccount[]
+  sourceItems        SourceItem[]
+  responsibilities   Responsibility[]
+
+  @@map("users")
+}
+
+model ConnectedAccount {
+  id                    String       @id @default(cuid())
+  userId                String
+  provider              String       @default("google")
+  providerAccountId     String       // e.g. Google User ID
+  encryptedAccessToken  String
+  encryptedRefreshToken String?
+  tokenExpiry           DateTime?
+  scope                 String?
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceItems           SourceItem[]
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("connected_accounts")
+}
+
+model SourceItem {
+  id               String           @id @default(cuid())
+  userId           String
+  accountId        String
+  externalId       String           // Message ID from Gmail / Event ID from Calendar
+  threadId         String?
+  sourceType       SourceType       @default(GMAIL)
+  subject          String?
+  sender           String?
+  receivedAt       DateTime?
+  createdAt        DateTime         @default(now())
+
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account          ConnectedAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  responsibilities Responsibility[]
+
+  @@unique([accountId, externalId], name: "account_external_id_unique")
+  @@index([userId, receivedAt])
+  @@map("source_items")
+}
+
+model Responsibility {
+  id             String                 @id @default(cuid())
+  userId         String
+  sourceItemId   String?
+  category       ResponsibilityCategory
+  title          String
+  description    String?                @db.Text
+  dueDate        DateTime?
+  amount         Decimal?               @db.Decimal(12, 2)
+  currency       String?                @db.VarChar(10)
+  status         ResponsibilityStatus   @default(UPCOMING)
+  evidence       String?                @db.Text
+  requiresAction Boolean                @default(true)
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  user           User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceItem     SourceItem?            @relation(fields: [sourceItemId], references: [id], onDelete: SetNull)
+
+  @@index([userId, category])
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@map("responsibilities")
+}

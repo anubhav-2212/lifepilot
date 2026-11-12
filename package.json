@@ -1,0 +1,22 @@
+{
+  "name": "lifepilot",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "api",
+    "web"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces",
+    "dev:api": "npm run dev --workspace=api",
+    "dev:web": "npm run dev --workspace=web",
+    "build": "npm run build --workspaces",
+    "db:up": "docker-compose up -d",
+    "db:down": "docker-compose down",
+    "db:migrate": "npm run prisma:migrate --workspace=api",
+    "db:studio": "npm run prisma:studio --workspace=api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
